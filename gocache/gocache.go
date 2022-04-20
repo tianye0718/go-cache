@@ -6,6 +6,8 @@ import (
 	"sync"
 
 	"github.com/tianye0718/go-cache/singleflight"
+
+	pb "github.com/tianye0718/go-cache/gocachepb"
 )
 
 // A Getter loads fro a key
@@ -103,11 +105,15 @@ func (g *Group) getLocally(key string) (ByteView, error) {
 	return value, nil
 }
 func (g *Group) getFromPeer(peer PeerGetter, key string) (ByteView, error) {
-	bytes, err := peer.Get(g.name, key)
+	req := &pb.Request{
+		Group: g.name,
+		Key:   key,
+	}
+	res, err := peer.Get(req)
 	if err != nil {
 		return ByteView{}, err
 	}
-	return ByteView{b: bytes}, nil
+	return ByteView{b: res.Value}, nil
 }
 func (g *Group) populateCache(key string, value ByteView) {
 	g.mainCache.add(key, value)
